@@ -21,17 +21,6 @@ main(int argc, char **argv)
 {
     hydro_init();
 
-    char colors[5][6] = {
-        "\033[91m",
-        "\033[92m",
-        "\033[93m",
-        "\033[94m",
-        "\033[95m",
-    };
-    char space[] = "␣";
-    char erase[] = "\033[2K";
-    char normal[] = "\033[m";
-
     char pad[1 * 5 * 19];
     unsigned n = 0, r[5][5][5] = {0};
 
@@ -59,17 +48,15 @@ main(int argc, char **argv)
             pad[i] = pad[j];
             pad[j] = tmp;
         }
-        unsigned z[3] = {1, 5, 19};
         unsigned x[3] = {0};
         for (unsigned k = 0; k < 3; k++) {
-            write(2, "\r", 1);
-            for (unsigned i = 0; i < sizeof(pad); i++) {
-                write(2, colors[(i * z[k] / 19) % 5], 5);
-                if (pad[i] == ' ') write(2, space, sizeof(space) - 1);
-                              else write(2, &pad[i], 1);
-            }
+            fprintf(stderr, "\r");
+            for (unsigned i = 0; i < sizeof(pad); i++)
+                fprintf(stderr, "\033[9%um%s\033[m",
+                        (i * (unsigned[]){1, 5, 19}[k] / 19) % 5 + 1,
+                        pad[i] == ' ' ? "␣" : (char[2]){pad[i]});
             char c;
-            read(0, &c, 1);
+            while (read(0, &c, 1) != 1);
             switch (c) {
                 case 'm': x[k] = 4; break;
                 case 'b': x[k] = 3; break;
@@ -90,8 +77,6 @@ main(int argc, char **argv)
     }
 end:
     g.pass[n] = 0;
-    write(2, erase, sizeof(erase) - 1);
-    write(2, normal, sizeof(normal) - 1);
-    write(2, "\r", 1);
+    fprintf(stderr, "\033[2K\r");
     printf("%s\n", g.pass);
 }
